@@ -43,6 +43,7 @@ public class UserDaoJDBCImpl implements UserDao {
             statement.setString(2, lastName);
             statement.setInt(3, age);
             statement.execute();
+            System.out.printf("User с именем — %s добавлен в базу данных\n", name);
         } catch (SQLException e) {
             throw new RuntimeException("Ошибка при добавлении пользователя", e);
         }
@@ -70,6 +71,7 @@ public class UserDaoJDBCImpl implements UserDao {
                 user.setAge(rs.getByte("age"));
                 users.add(user);
             }
+            System.out.println(users);
             return users;
         } catch (SQLException e) {
             throw new RuntimeException("Ошибка при получении пользователей из таблицы", e);
