@@ -18,7 +18,7 @@ public class Main {
         userService.getAllUsers();
         userService.dropUsersTable();
         try {
-            Util.closeConnection(Util.getConnection());
+            Util.closeConnection();
         } catch (SQLException e) {
             throw new RuntimeException("Ошибка при закрытии подключения к базе данных", e);
         }

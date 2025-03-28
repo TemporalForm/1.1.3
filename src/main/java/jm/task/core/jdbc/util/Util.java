@@ -24,7 +24,7 @@ public class Util {
         return connection;
     }
 
-    public static void closeConnection(Connection connection) throws SQLException {
+    public static void closeConnection() throws SQLException {
         if (connection != null) {
             connection.close();
         }
