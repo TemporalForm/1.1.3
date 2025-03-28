@@ -108,7 +108,7 @@ public class UserDaoJDBCImpl implements UserDao {
             try {
                 connection.rollback();
             } catch (SQLException ex) {
-                throw new RuntimeException("Ошибка при попытке очистить таблицу пользователей" + ex);
+                throw new RuntimeException("Ошибка при попытке откатить очистку таблицы пользователей" + ex);
             }
             throw new RuntimeException("Ошибка при попытке очистить таблицу пользователей", e);
         }
