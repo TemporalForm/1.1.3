@@ -15,13 +15,19 @@ import java.util.List;
 public class UserDaoJDBCImpl implements UserDao {
     private static final String insertUser = "INSERT INTO users (name, lastname, age) VALUES (?, ?, ?)";
 
-    public UserDaoJDBCImpl() {
+    private final Connection connection;
 
+    public UserDaoJDBCImpl() {
+        try {
+            this.connection = Util.getConnection();
+        } catch (SQLException e) {
+            throw new RuntimeException("Не удалось установить соединения с базой данных", e);
+        }
     }
 
     @Override
     public void createUsersTable() {
-        try (Statement statement = Util.getConnection().createStatement()) {
+        try (Statement statement = connection.createStatement()) {
             statement.execute("CREATE TABLE IF NOT EXISTS users (" +
                     "id INT AUTO_INCREMENT PRIMARY KEY, " +
                     "name VARCHAR(25) NOT NULL, " +
@@ -34,7 +40,7 @@ public class UserDaoJDBCImpl implements UserDao {
 
     @Override
     public void dropUsersTable() {
-        try (Connection conn = Util.getConnection(); Statement statement = conn.createStatement()) {
+        try (Statement statement = connection.createStatement()) {
             statement.execute("DROP TABLE IF EXISTS users");
         } catch (SQLException e) {
             throw new RuntimeException("Ошибка при удалении таблицы", e);
@@ -43,29 +49,40 @@ public class UserDaoJDBCImpl implements UserDao {
 
     @Override
     public void saveUser(String name, String lastName, byte age) {
-        try (PreparedStatement statement = Util.getConnection().prepareStatement(insertUser)) {
+        try (PreparedStatement statement = connection.prepareStatement(insertUser)) {
             statement.setString(1, name);
             statement.setString(2, lastName);
             statement.setInt(3, age);
             statement.execute();
-            System.out.printf("User с именем — %s добавлен в базу данных\n", name);
+            connection.commit();
         } catch (SQLException e) {
-            throw new RuntimeException("Ошибка при добавлении пользователя", e);
+            try {
+                connection.rollback();
+            } catch (SQLException ex) {
+                throw new RuntimeException("Ошибка при попытке откатить добавление пользователя" + ex);
+            }
+            throw new RuntimeException("Ошибка при попытке добавить пользователя", e);
         }
     }
 
     @Override
     public void removeUserById(long id) {
-        try (Statement statement = Util.getConnection().createStatement()) {
+        try (Statement statement = connection.createStatement()) {
             statement.execute("DELETE FROM users WHERE id = " + id);
+            connection.commit();
         } catch (SQLException e) {
-            throw new RuntimeException("Ошибка при удалении пользователя", e);
+            try {
+                connection.rollback();
+            } catch (SQLException ex) {
+                throw new RuntimeException("Ошибка при попытке откатить удаление пользователя" + ex);
+            }
+            throw new RuntimeException("Ошибка при попытке удалить пользователя", e);
         }
     }
 
     @Override
     public List<User> getAllUsers() {
-        try (Statement statement = Util.getConnection().createStatement()) {
+        try (Statement statement = connection.createStatement()) {
             ResultSet rs = statement.executeQuery("SELECT * FROM users");
             List<User> users = new ArrayList<>();
             while (rs.next()) {
@@ -76,21 +93,24 @@ public class UserDaoJDBCImpl implements UserDao {
                 user.setAge(rs.getByte("age"));
                 users.add(user);
             }
-            for (User user : users) {
-                System.out.println(user);
-            }
             return users;
         } catch (SQLException e) {
-            throw new RuntimeException("Ошибка при получении пользователей из таблицы", e);
+            throw new RuntimeException("Ошибка при попытке получить пользователей из таблицы", e);
         }
     }
 
     @Override
     public void cleanUsersTable() {
-        try (Statement statement = Util.getConnection().createStatement()) {
-            statement.executeUpdate("DELETE FROM users");
+        try (Statement statement = connection.createStatement()) {
+            statement.execute("DELETE FROM users");
+            connection.commit();
         } catch (SQLException e) {
-            throw new RuntimeException("Ошибка при удалении всех пользователей из таблицы", e);
+            try {
+                connection.rollback();
+            } catch (SQLException ex) {
+                throw new RuntimeException("Ошибка при попытке очистить таблицу пользователей" + ex);
+            }
+            throw new RuntimeException("Ошибка при попытке очистить таблицу пользователей", e);
         }
     }
 }
