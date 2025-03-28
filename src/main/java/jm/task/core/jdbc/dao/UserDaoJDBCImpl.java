@@ -3,7 +3,12 @@ package jm.task.core.jdbc.dao;
 import jm.task.core.jdbc.model.User;
 import jm.task.core.jdbc.util.Util;
 
-import java.sql.*;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,7 +21,7 @@ public class UserDaoJDBCImpl implements UserDao {
 
     @Override
     public void createUsersTable() {
-        try (Connection conn = Util.getConnection(); Statement statement = conn.createStatement()) {
+        try (Statement statement = Util.getConnection().createStatement()) {
             statement.execute("CREATE TABLE IF NOT EXISTS users (" +
                     "id INT AUTO_INCREMENT PRIMARY KEY, " +
                     "name VARCHAR(25) NOT NULL, " +
@@ -38,7 +43,7 @@ public class UserDaoJDBCImpl implements UserDao {
 
     @Override
     public void saveUser(String name, String lastName, byte age) {
-        try (Connection conn = Util.getConnection(); PreparedStatement statement = conn.prepareStatement(insertUser)) {
+        try (PreparedStatement statement = Util.getConnection().prepareStatement(insertUser)) {
             statement.setString(1, name);
             statement.setString(2, lastName);
             statement.setInt(3, age);
@@ -51,7 +56,7 @@ public class UserDaoJDBCImpl implements UserDao {
 
     @Override
     public void removeUserById(long id) {
-        try (Connection conn = Util.getConnection(); Statement statement = conn.createStatement()) {
+        try (Statement statement = Util.getConnection().createStatement()) {
             statement.execute("DELETE FROM users WHERE id = " + id);
         } catch (SQLException e) {
             throw new RuntimeException("Ошибка при удалении пользователя", e);
@@ -60,7 +65,7 @@ public class UserDaoJDBCImpl implements UserDao {
 
     @Override
     public List<User> getAllUsers() {
-        try (Connection conn = Util.getConnection(); Statement statement = conn.createStatement()) {
+        try (Statement statement = Util.getConnection().createStatement()) {
             ResultSet rs = statement.executeQuery("SELECT * FROM users");
             List<User> users = new ArrayList<>();
             while (rs.next()) {
@@ -82,7 +87,7 @@ public class UserDaoJDBCImpl implements UserDao {
 
     @Override
     public void cleanUsersTable() {
-        try (Connection conn = Util.getConnection(); Statement statement = conn.createStatement()) {
+        try (Statement statement = Util.getConnection().createStatement()) {
             statement.executeUpdate("DELETE FROM users");
         } catch (SQLException e) {
             throw new RuntimeException("Ошибка при удалении всех пользователей из таблицы", e);

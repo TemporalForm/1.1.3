@@ -2,6 +2,9 @@ package jm.task.core.jdbc;
 
 import jm.task.core.jdbc.service.UserService;
 import jm.task.core.jdbc.service.UserServiceImpl;
+import jm.task.core.jdbc.util.Util;
+
+import java.sql.SQLException;
 
 public class Main {
     public static void main(String[] args) {
@@ -14,5 +17,10 @@ public class Main {
         userService.removeUserById(2);
         userService.getAllUsers();
         userService.dropUsersTable();
+        try {
+            Util.closeConnection(Util.getConnection());
+        } catch (SQLException e) {
+            throw new RuntimeException("Ошибка при закрытии подключения к базе данных", e);
+        }
     }
 }
